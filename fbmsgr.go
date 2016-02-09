@@ -16,20 +16,24 @@ type incomingMessage struct {
 }
 
 func main() {
+	//TODO: Infinit loop
+
 	db, err := sql.Open("mysql", "root:password@/mydb")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer db.Close()
 
+	//TODO: Process list
 	message := getUnReadMessages(db)
 
 	fmt.Printf("== %s ", message.AuthorName)
 
-	//TODO: Process the new message
 	var returnMessage string
 	if message.Message == "hello" {
 		returnMessage = "Good day sir."
+	} else if message.Message == "q" {
+		returnMessage = "Test"
 	}
 
 	toggleIsRead(db, message)
@@ -50,7 +54,6 @@ func getUnReadMessages(db *sql.DB) incomingMessage {
 
 	var message incomingMessage
 
-	//TODO: loop for multiple rows
 	err = stmtOut.QueryRow(0).Scan(&message.ID, &message.AuthorID, &message.ThreadID, &message.AuthorName, &message.Message, &message.isRead)
 	if err != nil {
 		panic(err.Error())
@@ -80,6 +83,7 @@ func insertMessageToSend(db *sql.DB, message incomingMessage, returnMessage stri
 
 	defer stmNewOutbox.Close()
 	fmt.Printf("returnMessage = %s", returnMessage)
+	_, err = stmNewOutbox.Exec(message.AuthorID, message.ThreadID, message.AuthorName, returnMessage)
 	if err != nil {
 		panic(err.Error())
 	}
